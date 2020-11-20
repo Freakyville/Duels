@@ -14,6 +14,8 @@ import javax.annotation.Nonnull;
 import lombok.Getter;
 import me.realized.duels.kit.Kit;
 import me.realized.duels.queue.Queue;
+import me.realized.duels.setting.Settings;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -30,27 +32,38 @@ public class Match implements me.realized.duels.api.match.Match {
     private final int bet;
     @Getter
     private final Queue source;
+    @Getter
+    private final Settings settings;
     private final Map<Player, Boolean> players = new HashMap<>();
 
-    Match(final Arena arena, final Kit kit, final Map<UUID, List<ItemStack>> items, final int bet, final Queue source) {
+    Match(final Arena arena, final Kit kit, final Map<UUID, List<ItemStack>> items, final int bet, final Queue source, @Nonnull Settings settings) {
         this.arena = arena;
         this.start = System.currentTimeMillis();
         this.kit = kit;
         this.items = items;
         this.bet = bet;
         this.source = source;
+        this.settings = settings;
     }
 
     Map<Player, Boolean> getPlayerMap() {
         return players;
     }
 
-    Set<Player> getAlivePlayers() {
+    public Set<Player> getAlivePlayers() {
         return players.entrySet().stream().filter(entry -> !entry.getValue()).map(Entry::getKey).collect(Collectors.toSet());
     }
 
     public Set<Player> getAllPlayers() {
         return players.keySet();
+    }
+
+
+    public boolean isDead(UUID uuid) {
+        Player p = Bukkit.getPlayer(uuid);
+        if (p == null)
+            return true;
+        return isDead(p);
     }
 
     public boolean isDead(final Player player) {

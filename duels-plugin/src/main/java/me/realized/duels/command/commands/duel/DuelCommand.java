@@ -115,7 +115,7 @@ public class DuelCommand extends BaseCommand {
 
         final Player target = Bukkit.getPlayerExact(args[0]);
 
-        if (target == null || !player.canSee(target)) {
+        if (target == null) {
             lang.sendMessage(sender, "ERROR.player.not-found", "name", args[0]);
             return true;
         }
@@ -219,6 +219,7 @@ public class DuelCommand extends BaseCommand {
         }
 
         settings.setTarget(target);
+        settings.setAlly(player.getUniqueId());
         settings.setBaseLoc(player);
         settings.setDuelzone(player, duelzone);
         settings.setGameMode(player, gameMode);

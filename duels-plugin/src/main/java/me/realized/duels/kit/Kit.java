@@ -131,6 +131,7 @@ public class Kit extends BaseButton implements me.realized.duels.api.kit.Kit {
         }
 
         final Settings settings = settingManager.getSafely(player);
+
         settings.setKit(this);
         settings.openGui(player);
     }

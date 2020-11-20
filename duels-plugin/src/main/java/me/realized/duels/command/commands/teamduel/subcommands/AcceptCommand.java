@@ -1,19 +1,24 @@
-package me.realized.duels.command.commands.duel.subcommands;
+package me.realized.duels.command.commands.teamduel.subcommands;
 
 import me.realized.duels.DuelsPlugin;
-import me.realized.duels.api.event.request.RequestAcceptEvent;
 import me.realized.duels.command.BaseCommand;
 import me.realized.duels.hook.hooks.CombatLogXHook;
 import me.realized.duels.hook.hooks.CombatTagPlusHook;
 import me.realized.duels.hook.hooks.PvPManagerHook;
 import me.realized.duels.hook.hooks.worldguard.WorldGuardHook;
 import me.realized.duels.request.Request;
+import me.realized.duels.request.TeamRequest;
 import me.realized.duels.setting.Settings;
 import me.realized.duels.util.inventory.InventoryUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class AcceptCommand extends BaseCommand {
 
@@ -22,8 +27,8 @@ public class AcceptCommand extends BaseCommand {
     private final CombatLogXHook combatLogX;
     private final WorldGuardHook worldGuard;
 
-    public AcceptCommand(final DuelsPlugin plugin) {
-        super(plugin, "accept", "accept [player]", "Accepts a duel request.", 2, true);
+    public AcceptCommand(DuelsPlugin plugin) {
+        super(plugin, "accept", "accept [player]", "Accepts a team duel request.", 2, true);
         this.combatTagPlus = hookManager.getHook(CombatTagPlusHook.class);
         this.pvpManager = hookManager.getHook(PvPManagerHook.class);
         this.combatLogX = plugin.getHookManager().getHook(CombatLogXHook.class);
@@ -31,7 +36,7 @@ public class AcceptCommand extends BaseCommand {
     }
 
     @Override
-    protected void execute(final CommandSender sender, final String label, final String[] args) {
+    protected void execute(CommandSender sender, String label, String[] args) {
         final Player player = (Player) sender;
 
         if (config.isRequiresClearedInventory() && InventoryUtil.hasItem(player)) {
@@ -45,10 +50,9 @@ public class AcceptCommand extends BaseCommand {
             lang.sendMessage(sender, "ERROR.duel.in-creative-mode");
             return;
         }
-
         if ((combatTagPlus != null && combatTagPlus.isTagged(player))
-            || (pvpManager != null && pvpManager.isTagged(player))
-            || (combatLogX != null && combatLogX.isTagged(player))) {
+                || (pvpManager != null && pvpManager.isTagged(player))
+                || (combatLogX != null && combatLogX.isTagged(player))) {
             lang.sendMessage(sender, "ERROR.duel.is-tagged");
             return;
         }
@@ -77,27 +81,16 @@ public class AcceptCommand extends BaseCommand {
             return;
         }
 
-        final Request request = requestManager.get(target, player);
+        final TeamRequest request = requestManager.getTeamRequest(target, player);
 
         if (request == null) {
             lang.sendMessage(sender, "ERROR.duel.no-request", "name", target.getName());
             return;
         }
-
-        final RequestAcceptEvent event = new RequestAcceptEvent(player, target, request);
-        plugin.getServer().getPluginManager().callEvent(event);
-
-        if (event.isCancelled()) {
-            return;
-        }
-
-        requestManager.remove(target, player);
-
         if (arenaManager.isInMatch(target)) {
             lang.sendMessage(sender, "ERROR.duel.already-in-match.target", "name", target.getName());
             return;
         }
-
         if (spectateManager.isSpectating(target)) {
             lang.sendMessage(sender, "ERROR.spectate.already-spectating.target", "name", target.getName());
             return;
@@ -107,19 +100,37 @@ public class AcceptCommand extends BaseCommand {
         final String kit = settings.getKit() != null ? settings.getKit().getName() : lang.getMessage("GENERAL.not-selected");
         final String arena = settings.getArena() != null ? settings.getArena().getName() : lang.getMessage("GENERAL.random");
         final double bet = settings.getBet();
-        final String itemBetting = settings.isItemBetting() ? lang.getMessage("GENERAL.enabled") : lang.getMessage("GENERAL.disabled");
-        lang.sendMessage(player, "COMMAND.duel.request.accept.receiver",
-            "name", target.getName(), "kit", kit, "arena", arena, "bet_amount", bet, "item_betting", itemBetting);
-        lang.sendMessage(target, "COMMAND.duel.request.accept.sender",
-            "name", player.getName(), "kit", kit, "arena", arena, "bet_amount", bet, "item_betting", itemBetting);
 
-        if (settings.isItemBetting()) {
-            settings.setBaseLoc(player);
-            settings.setDuelzone(player, duelzone);
-            settings.setGameMode(player, gameMode);
-            bettingManager.open(settings, target, player);
-        } else {
-            duelManager.startMatch(player, target, settings, null, null);
+        lang.sendMessage(player, "COMMAND.duel.request.team.accept.receiver",
+                "name", target.getName(), "kit", kit, "arena", arena, "bet_amount", bet);
+        notifyAccepters(player.getName(), request.getAccepted(), arena, kit, bet, request.getAcceptRequirement());
+        request.addAccepted(player.getUniqueId());
+
+        if (request.getAccepted().size() == request.getAcceptRequirement()) {
+            requestManager.removeTeamRequest(player);
+            Set<Player> allyTeam = request.getTeam1().stream().map(Bukkit::getPlayer).collect(Collectors.toSet());
+            Set<Player> targetTeam = request.getTeam2().stream().map(Bukkit::getPlayer).collect(Collectors.toSet());
+            if (allyTeam.contains(null) || targetTeam.contains(null)) {
+                lang.sendMessage(sender, "COMMAND.duel.request.team.logged-off");
+                return;
+            }
+
+            duelManager.startTeamMatch(player, allyTeam, targetTeam, settings);
         }
+
+    }
+    private void notifyAccepters(String accepterName, Set<UUID> accepters, String arena, String kit, double bet, int required) {
+        accepters.forEach(uuid -> {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null)
+                return;
+            lang.sendMessage(player, "COMMAND.duel.request.team.accept.accepter",
+                    "name", accepterName,
+                    "kit", kit,
+                    "arena", arena,
+                    "bet_amount", bet,
+                    "required", (required),
+                    "count", (accepters.size() + 1));
+        });
     }
 }

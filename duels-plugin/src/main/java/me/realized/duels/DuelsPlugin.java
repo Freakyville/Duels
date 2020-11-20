@@ -3,6 +3,7 @@ package me.realized.duels;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+
 import lombok.Getter;
 import me.realized.duels.api.Duels;
 import me.realized.duels.api.command.SubCommand;
@@ -22,6 +24,7 @@ import me.realized.duels.command.commands.SpectateCommand;
 import me.realized.duels.command.commands.duel.DuelCommand;
 import me.realized.duels.command.commands.duels.DuelsCommand;
 import me.realized.duels.command.commands.queue.QueueCommand;
+import me.realized.duels.command.commands.teamduel.TeamDuelCommand;
 import me.realized.duels.config.Config;
 import me.realized.duels.config.Lang;
 import me.realized.duels.data.UserManager;
@@ -31,13 +34,7 @@ import me.realized.duels.extension.ExtensionManager;
 import me.realized.duels.hook.HookManager;
 import me.realized.duels.inventories.InventoryManager;
 import me.realized.duels.kit.KitManager;
-import me.realized.duels.listeners.DamageListener;
-import me.realized.duels.listeners.KitItemListener;
-import me.realized.duels.listeners.PotionListener;
-import me.realized.duels.listeners.ProjectileHitListener;
-import me.realized.duels.listeners.SoupListener;
-import me.realized.duels.listeners.SumoListener;
-import me.realized.duels.listeners.TeleportListener;
+import me.realized.duels.listeners.*;
 import me.realized.duels.logging.LogManager;
 import me.realized.duels.player.PlayerInfoManager;
 import me.realized.duels.queue.QueueManager;
@@ -186,6 +183,7 @@ public class DuelsPlugin extends JavaPlugin implements Duels, LogSource {
         new SoupListener(this);
         new SumoListener(this);
         new ProjectileHitListener(this);
+        new SessionListener(this, requestManager, lang);
 
         new Metrics(this);
 
@@ -235,10 +233,11 @@ public class DuelsPlugin extends JavaPlugin implements Duels, LogSource {
      */
     private boolean load() {
         registerCommands(
-            new DuelCommand(this),
-            new QueueCommand(this),
-            new SpectateCommand(this),
-            new DuelsCommand(this)
+                new DuelCommand(this),
+                new QueueCommand(this),
+                new SpectateCommand(this),
+                new DuelsCommand(this),
+                new TeamDuelCommand(this)
         );
 
         for (final Loadable loadable : loadables) {
@@ -272,9 +271,9 @@ public class DuelsPlugin extends JavaPlugin implements Duels, LogSource {
         registeredListeners.clear();
         // Unregister all extension listeners that isn't using the method Duels#registerListener
         HandlerList.getRegisteredListeners(this)
-            .stream()
-            .filter(listener -> listener.getListener().getClass().getClassLoader().getClass().isAssignableFrom(ExtensionClassLoader.class))
-            .forEach(listener -> HandlerList.unregisterAll(listener.getListener()));
+                .stream()
+                .filter(listener -> listener.getListener().getClass().getClassLoader().getClass().isAssignableFrom(ExtensionClassLoader.class))
+                .forEach(listener -> HandlerList.unregisterAll(listener.getListener()));
         commands.clear();
 
         for (final Loadable loadable : Lists.reverse(loadables)) {
@@ -357,8 +356,8 @@ public class DuelsPlugin extends JavaPlugin implements Duels, LogSource {
             return true;
         } catch (Exception ex) {
             Log.error("There was an error while " + (unloaded ? "loading " : "unloading ")
-                + loadable.getClass().getSimpleName()
-                + "! If you believe this is an issue from the plugin, please contact the developer.", ex);
+                    + loadable.getClass().getSimpleName()
+                    + "! If you believe this is an issue from the plugin, please contact the developer.", ex);
             return false;
         }
     }
@@ -441,9 +440,9 @@ public class DuelsPlugin extends JavaPlugin implements Duels, LogSource {
 
     public List<String> getReloadables() {
         return loadables.stream()
-            .filter(loadable -> loadable instanceof Reloadable)
-            .map(loadable -> loadable.getClass().getSimpleName())
-            .collect(Collectors.toList());
+                .filter(loadable -> loadable instanceof Reloadable)
+                .map(loadable -> loadable.getClass().getSimpleName())
+                .collect(Collectors.toList());
     }
 
     @Override

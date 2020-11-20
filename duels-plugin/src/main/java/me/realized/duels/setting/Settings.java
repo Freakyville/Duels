@@ -1,8 +1,7 @@
 package me.realized.duels.setting;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
 import lombok.Getter;
 import lombok.Setter;
 import me.realized.duels.DuelsPlugin;
@@ -19,7 +18,10 @@ public class Settings {
     private final SettingsGui gui;
 
     @Getter
-    private UUID target;
+    private Set<UUID> allyTeam;
+
+    @Getter
+    private Set<UUID> targetTeam;
     @Getter
     @Setter
     private Kit kit;
@@ -45,19 +47,36 @@ public class Settings {
     }
 
     public void reset() {
-        target = null;
+        targetTeam = null;
+        allyTeam = null;
         kit = null;
         arena = null;
         bet = 0;
         itemBetting = false;
     }
-
-    public void setTarget(final Player target) {
-        if (this.target != null && !this.target.equals(target.getUniqueId())) {
+    public void setAlly(UUID uuid) {
+        setAllyTeam(Collections.singleton(uuid));
+    }
+    public void setAllyTeam(Set<UUID> allyTeam) {
+        if (this.allyTeam != null) {
             reset();
         }
+        this.allyTeam = allyTeam;
+    }
 
-        this.target = target.getUniqueId();
+    public void setTargetTeam(Set<UUID> targetTeam){
+        if (this.targetTeam != null) {
+            reset();
+        }
+        this.targetTeam = targetTeam;
+    }
+
+    public void setTarget(final Player target) {
+        if (this.targetTeam != null && !this.targetTeam.contains(target.getUniqueId())) {
+            reset();
+        }
+        this.targetTeam = Collections.singleton(target.getUniqueId());
+
     }
 
     public void updateGui(final Player player) {
@@ -115,7 +134,8 @@ public class Settings {
     // Don't copy the gui since it won't be required to start a match
     public Settings lightCopy() {
         final Settings copy = new Settings(plugin);
-        copy.target = target;
+        copy.targetTeam = targetTeam;
+        copy.allyTeam = allyTeam;
         copy.kit = kit;
         copy.arena = arena;
         copy.bet = bet;

@@ -18,27 +18,31 @@ public class RequestSendButton extends BaseButton {
     public void onClick(final Player player) {
         final Settings settings = settingManager.getSafely(player);
 
-        if (settings.getTarget() == null) {
+        if (settings.getTargetTeam() == null) {
             settings.reset();
             player.closeInventory();
             return;
         }
 
-        final Player target = Bukkit.getPlayer(settings.getTarget());
+        if (settings.getTargetTeam().size() == 1) {
+            final Player target = Bukkit.getPlayer(settings.getTargetTeam().stream().findFirst().get());
 
-        if (target == null) {
-            settings.reset();
+            if (target == null) {
+                settings.reset();
+                player.closeInventory();
+                lang.sendMessage(player, "ERROR.player.no-longer-online");
+                return;
+            }
+
+            if (!config.isUseOwnInventoryEnabled() && settings.getKit() == null) {
+                player.closeInventory();
+                return;
+            }
+
             player.closeInventory();
-            lang.sendMessage(player, "ERROR.player.no-longer-online");
-            return;
+            requestManager.send(player, target, settings);
+        } else {
+            requestManager.send(player, settings.getAllyTeam(), settings.getTargetTeam(), settings);
         }
-
-        if (!config.isUseOwnInventoryEnabled() && settings.getKit() == null) {
-            player.closeInventory();
-            return;
-        }
-
-        player.closeInventory();
-        requestManager.send(player, target, settings);
     }
 }

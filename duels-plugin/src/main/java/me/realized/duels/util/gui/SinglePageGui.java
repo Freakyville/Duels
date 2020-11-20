@@ -60,7 +60,7 @@ public class SinglePageGui<P extends JavaPlugin> extends AbstractGui<P> {
         if (button == null) {
             return;
         }
-
+        System.out.println("SinglePageGUI click start");
         button.onClick(player);
     }
 }

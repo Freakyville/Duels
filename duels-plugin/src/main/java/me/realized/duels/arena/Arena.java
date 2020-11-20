@@ -136,11 +136,28 @@ public class Arena extends BaseButton implements me.realized.duels.api.arena.Are
         return !isDisabled() && !isUsed() && getPosition(1) != null && getPosition(2) != null;
     }
 
-    public Match startMatch(final Kit kit, final Map<UUID, List<ItemStack>> items, final int bet, final Queue source) {
-        this.match = new Match(this, kit, items, bet, source);
+    public Match startMatch(final Kit kit, final Map<UUID, List<ItemStack>> items, final int bet, final Queue source, Settings settings) {
+        this.match = new Match(this, kit, items, bet, source, settings);
         setLore(lang.getMessage("GUI.arena-selector.buttons.arena.lore-unavailable").split("\n"));
         arenaManager.getGui().calculatePages();
         return match;
+    }
+    public void endTeamMatch(Set<Player> winners, Set<Player> losers, Reason reason) {
+        spectateManager.stopSpectating(this);
+
+        //final MatchEndEvent endEvent = new MatchEndEvent(match, winner, loser, reason);
+        //plugin.getServer().getPluginManager().callEvent(endEvent);
+
+        final Queue source = match.getSource();
+        match = null;
+
+        if (source != null) {
+            source.update();
+            queueManager.getGui().calculatePages();
+        }
+
+        setLore(lang.getMessage("GUI.arena-selector.buttons.arena.lore-available").split("\n"));
+        arenaManager.getGui().calculatePages();
     }
 
     public void endMatch(final UUID winner, final UUID loser, final Reason reason) {
