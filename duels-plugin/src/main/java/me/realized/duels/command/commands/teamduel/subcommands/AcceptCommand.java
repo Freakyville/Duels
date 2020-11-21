@@ -103,9 +103,10 @@ public class AcceptCommand extends BaseCommand {
 
         lang.sendMessage(player, "COMMAND.duel.request.team.accept.receiver",
                 "name", target.getName(), "kit", kit, "arena", arena, "bet_amount", bet);
-        notifyAccepters(player.getName(), request.getAccepted(), arena, kit, bet, request.getAcceptRequirement());
-        request.addAccepted(player.getUniqueId());
-
+        if (!request.getAccepted().contains(player.getUniqueId())) {
+            request.addAccepted(player.getUniqueId());
+            notifyAccepters(player, request.getAccepted(), arena, kit, bet, request.getAcceptRequirement());
+        }
         if (request.getAccepted().size() == request.getAcceptRequirement()) {
             requestManager.removeTeamRequest(player);
             Set<Player> allyTeam = request.getTeam1().stream().map(Bukkit::getPlayer).collect(Collectors.toSet());
@@ -119,13 +120,16 @@ public class AcceptCommand extends BaseCommand {
         }
 
     }
-    private void notifyAccepters(String accepterName, Set<UUID> accepters, String arena, String kit, double bet, int required) {
+    private void notifyAccepters(Player accepter, Set<UUID> accepters, String arena, String kit, double bet, int required) {
         accepters.forEach(uuid -> {
             Player player = Bukkit.getPlayer(uuid);
             if (player == null)
                 return;
+            if (accepter.getUniqueId().equals(uuid)) {
+                return;
+            }
             lang.sendMessage(player, "COMMAND.duel.request.team.accept.accepter",
-                    "name", accepterName,
+                    "name", accepter.getName(),
                     "kit", kit,
                     "arena", arena,
                     "bet_amount", bet,

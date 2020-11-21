@@ -58,9 +58,6 @@ public class Settings {
         setAllyTeam(Collections.singleton(uuid));
     }
     public void setAllyTeam(Set<UUID> allyTeam) {
-        if (this.allyTeam != null) {
-            reset();
-        }
         this.allyTeam = allyTeam;
     }
 
@@ -72,6 +69,7 @@ public class Settings {
     }
 
     public void setTarget(final Player target) {
+        System.out.println("setting target! " + (this.targetTeam == null));
         if (this.targetTeam != null && !this.targetTeam.contains(target.getUniqueId())) {
             reset();
         }

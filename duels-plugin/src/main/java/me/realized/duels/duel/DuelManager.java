@@ -32,6 +32,7 @@ import me.realized.duels.player.PlayerInfoManager;
 import me.realized.duels.queue.Queue;
 import me.realized.duels.queue.QueueManager;
 import me.realized.duels.setting.Settings;
+import me.realized.duels.spectate.SpectateManager;
 import me.realized.duels.util.*;
 import me.realized.duels.util.compat.CompatUtil;
 import me.realized.duels.util.compat.Players;
@@ -42,6 +43,7 @@ import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.entity.Damageable;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
@@ -72,6 +74,7 @@ public class DuelManager implements Loadable {
     private final ArenaManager arenaManager;
     private final PlayerInfoManager playerManager;
     private final InventoryManager inventoryManager;
+    private final SpectateManager spectateManager;
 
     private QueueManager queueManager;
     private Teleport teleport;
@@ -94,6 +97,7 @@ public class DuelManager implements Loadable {
         this.arenaManager = plugin.getArenaManager();
         this.playerManager = plugin.getPlayerManager();
         this.inventoryManager = plugin.getInventoryManager();
+        this.spectateManager = plugin.getSpectateManager();
         plugin.doSyncAfter(() -> plugin.getServer().getPluginManager().registerEvents(new DuelListener(), plugin), 1L);
     }
 
@@ -670,6 +674,28 @@ public class DuelManager implements Loadable {
         builder.send(match.getAllPlayers());
     }
 
+    private void handleEndUsersTeam(Match match, Set<UserData> winners, Set<UserData> losers, MatchData matchData) {
+
+        String winnerNames = winners.stream().map(UserData::getName).collect(Collectors.joining(", "));
+        String loserNames = losers.stream().map(UserData::getName).collect(Collectors.joining(", "));
+
+        final String message = lang.getMessage("DUEL.on-end.opponent-defeat",
+                "winner", winnerNames,
+                "loser", loserNames,
+                "health", matchData.getHealth(),
+                "kit", matchData.getKit(),
+                "arena", match.getArena().getName()
+        );
+        if (message == null) {
+            return;
+        }
+        if (config.isArenaOnlyEndMessage()) {
+            match.getArena().broadcast(message);
+        } else {
+            Players.getOnlinePlayers().forEach(player -> player.sendMessage(message));
+        }
+    }
+
     private void handleEndUsers(final Match match, final UserData winner, final UserData loser, final MatchData matchData) {
         if (winner != null && loser != null) {
             winner.addWin();
@@ -847,7 +873,7 @@ public class DuelManager implements Loadable {
             }, 1L);
         }
 
-        private void handleTeamDeath(Arena arena, Match match) {
+        private void handleTeamDeath(Arena arena, Match match, Player deadPlayer) {
             Set<Player> alliesAlive = match.getSettings().getAllyTeam().stream()
                     .map(uuid -> {
                         Player player = Bukkit.getPlayer(uuid);
@@ -871,11 +897,25 @@ public class DuelManager implements Loadable {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             if (alliesAlive.size() == 0) { //targets won
+
+                final long duration = System.currentTimeMillis() - match.getStart();
+                final long time = new GregorianCalendar().getTimeInMillis();
+                handleEndUsersTeam(match,
+                        match.getSettings().getTargetTeam().stream().map(userDataManager::get).collect(Collectors.toSet()),
+                        match.getSettings().getAllyTeam().stream().map(userDataManager::get).collect(Collectors.toSet()),
+                        new MatchData("", "", match.getKit().getName(), time, duration, targetsAlive.stream().mapToDouble(Damageable::getHealth).sum()));
                 handleWinnerTeam(arena, match, match.getSettings().getTargetTeam(), targetsAlive, match.getSettings().getAllyTeam());
+            } else if (targetsAlive.size() == 0) { //allies won
+                final long duration = System.currentTimeMillis() - match.getStart();
+                final long time = new GregorianCalendar().getTimeInMillis();
+                handleEndUsersTeam(match,
+                        match.getSettings().getAllyTeam().stream().map(userDataManager::get).collect(Collectors.toSet()),
+                        match.getSettings().getTargetTeam().stream().map(userDataManager::get).collect(Collectors.toSet()),
+                        new MatchData("", "", match.getKit().getName(), time, duration, alliesAlive.stream().mapToDouble(Damageable::getHealth).sum()));
+                handleWinnerTeam(arena, match, match.getSettings().getAllyTeam(), alliesAlive, match.getSettings().getTargetTeam());
             } else {
-                if (targetsAlive.size() == 0) { //allies won
-                    handleWinnerTeam(arena, match, match.getSettings().getAllyTeam(), alliesAlive, match.getSettings().getTargetTeam());
-                }
+                TextBuilder.of("",null, null )
+                spectateManager.startSpectating(deadPlayer, targetsAlive.stream().findFirst().get());
             }
         }
 

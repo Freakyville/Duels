@@ -151,9 +151,8 @@ public class TeamDuelCommand extends BaseCommand {
         Integer bet = getBet(creator, args[3]);
         if (bet == null)
             return false;
-
-        settings.setAllyTeam(team1.stream().map(Entity::getUniqueId).collect(Collectors.toSet()));
         settings.setTargetTeam(team2.stream().map(Entity::getUniqueId).collect(Collectors.toSet()));
+        settings.setAllyTeam(team1.stream().map(Entity::getUniqueId).collect(Collectors.toSet()));
 
         return true;
     }
@@ -187,8 +186,9 @@ public class TeamDuelCommand extends BaseCommand {
         Integer bet = getBet(creator, stringBet);
         if (bet != null)
             settings.setBet(bet);
-        settings.setAllyTeam(team1.stream().map(Entity::getUniqueId).collect(Collectors.toSet()));
         settings.setTargetTeam(team2.stream().map(Entity::getUniqueId).collect(Collectors.toSet()));
+        settings.setAllyTeam(team1.stream().map(Entity::getUniqueId).collect(Collectors.toSet()));
+
         return true;
 
     }
