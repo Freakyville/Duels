@@ -43,11 +43,8 @@ import me.realized.duels.request.RequestManager;
 import me.realized.duels.setting.SettingsManager;
 import me.realized.duels.shaded.bstats.Metrics;
 import me.realized.duels.spectate.SpectateManager;
-import me.realized.duels.util.Loadable;
-import me.realized.duels.util.Log;
+import me.realized.duels.util.*;
 import me.realized.duels.util.Log.LogSource;
-import me.realized.duels.util.Reloadable;
-import me.realized.duels.util.Teleport;
 import me.realized.duels.util.command.AbstractCommand;
 import me.realized.duels.util.gui.GuiListener;
 import org.bukkit.command.CommandSender;
@@ -125,6 +122,7 @@ public class DuelsPlugin extends JavaPlugin implements Duels, LogSource {
     public void onEnable() {
         instance = this;
         Log.addSource(this);
+        MethodMessage methodMessage = new MethodMessage();
 
         try {
             logManager = new LogManager(this);

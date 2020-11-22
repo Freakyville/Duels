@@ -830,7 +830,7 @@ public class DuelManager implements Loadable {
                     return;
                 }
                 if (match.getSettings().getAllyTeam().size() > 1) {
-                    handleTeamDeath(arena, match);
+                    handleTeamDeath(arena, match, player);
                     return;
                 }
 
@@ -874,28 +874,8 @@ public class DuelManager implements Loadable {
         }
 
         private void handleTeamDeath(Arena arena, Match match, Player deadPlayer) {
-            Set<Player> alliesAlive = match.getSettings().getAllyTeam().stream()
-                    .map(uuid -> {
-                        Player player = Bukkit.getPlayer(uuid);
-                        if (player == null)
-                            return null;
-                        if (match.isDead(player))
-                            return null;
-                        return player;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-            Set<Player> targetsAlive = match.getSettings().getTargetTeam().stream()
-                    .map(uuid -> {
-                        Player player = Bukkit.getPlayer(uuid);
-                        if (player == null)
-                            return null;
-                        if (match.isDead(player))
-                            return null;
-                        return player;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
+            Set<Player> alliesAlive = getPlayersAllive(match.getSettings().getAllyTeam(), match);
+            Set<Player> targetsAlive = getPlayersAllive(match.getSettings().getTargetTeam(), match);
             if (alliesAlive.size() == 0) { //targets won
 
                 final long duration = System.currentTimeMillis() - match.getStart();
@@ -914,9 +894,34 @@ public class DuelManager implements Loadable {
                         new MatchData("", "", match.getKit().getName(), time, duration, alliesAlive.stream().mapToDouble(Damageable::getHealth).sum()));
                 handleWinnerTeam(arena, match, match.getSettings().getAllyTeam(), alliesAlive, match.getSettings().getTargetTeam());
             } else {
-                TextBuilder.of("",null, null )
-                spectateManager.startSpectating(deadPlayer, targetsAlive.stream().findFirst().get());
+                MethodMessage.sendMessage(deadPlayer, "Du døde, tryk her for at spectate dine teammates", () -> {
+                    boolean isAlly = match.getSettings().getAllyTeam().contains(deadPlayer.getUniqueId());
+                    boolean isTarget = match.getSettings().getTargetTeam().contains(deadPlayer.getUniqueId());
+                    boolean allAlliesDead = true;
+                    if (isAlly) {
+                        Set<Player> players = getPlayersAllive(match.getSettings().getAllyTeam(), match);
+                        if (players.size() == 0) {
+                            deadPlayer.sendMessage("§cAlle dine teammates er døde og du kan derfor ikke spectate fighten");
+                        } else {
+                            spectateManager.startSpectating(deadPlayer, players.stream().findFirst().get());
+                        }
+                    }
+                }, 15);
+
             }
+        }
+        private Set<Player> getPlayersAllive(Set<UUID> teamToCheck, Match match) {
+            return teamToCheck.stream()
+                    .map(uuid -> {
+                        Player player = Bukkit.getPlayer(uuid);
+                        if (player == null)
+                            return null;
+                        if (match.isDead(player))
+                            return null;
+                        return player;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
         }
 
         private void handleWinnerTeam(Arena arena, Match match, Set<UUID> winningPlayerUUIDs, Set<Player> playersAlive, Set<UUID> losingPlayers) {
