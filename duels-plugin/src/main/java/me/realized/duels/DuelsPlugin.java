@@ -122,7 +122,7 @@ public class DuelsPlugin extends JavaPlugin implements Duels, LogSource {
     public void onEnable() {
         instance = this;
         Log.addSource(this);
-        MethodMessage methodMessage = new MethodMessage();
+        MethodMessage methodMessage = new MethodMessage(this);
 
         try {
             logManager = new LogManager(this);
@@ -181,6 +181,7 @@ public class DuelsPlugin extends JavaPlugin implements Duels, LogSource {
         new SoupListener(this);
         new SumoListener(this);
         new ProjectileHitListener(this);
+        new EnderpearlListener(this);
         new SessionListener(this, requestManager, lang);
 
         new Metrics(this);

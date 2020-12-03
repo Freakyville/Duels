@@ -682,7 +682,7 @@ public class DuelManager implements Loadable {
         final String message = lang.getMessage("DUEL.on-end.opponent-defeat",
                 "winner", winnerNames,
                 "loser", loserNames,
-                "health", matchData.getHealth(),
+                "health", (Math.ceil(matchData.getHealth()) * 0.5),
                 "kit", matchData.getKit(),
                 "arena", match.getArena().getName()
         );
@@ -894,19 +894,27 @@ public class DuelManager implements Loadable {
                         new MatchData("", "", match.getKit().getName(), time, duration, alliesAlive.stream().mapToDouble(Damageable::getHealth).sum()));
                 handleWinnerTeam(arena, match, match.getSettings().getAllyTeam(), alliesAlive, match.getSettings().getTargetTeam());
             } else {
-                MethodMessage.sendMessage(deadPlayer, "Du døde, tryk her for at spectate dine teammates", () -> {
+
+                MethodMessage.sendMessage(deadPlayer, lang.getMessage("SPECTATE.start-spectate"), () -> {
+                    System.out.println("here");
                     boolean isAlly = match.getSettings().getAllyTeam().contains(deadPlayer.getUniqueId());
                     boolean isTarget = match.getSettings().getTargetTeam().contains(deadPlayer.getUniqueId());
-                    boolean allAlliesDead = true;
                     if (isAlly) {
                         Set<Player> players = getPlayersAllive(match.getSettings().getAllyTeam(), match);
                         if (players.size() == 0) {
-                            deadPlayer.sendMessage("§cAlle dine teammates er døde og du kan derfor ikke spectate fighten");
+                            lang.sendMessage(deadPlayer, "SPECTATE.dead");
+                        } else {
+                            spectateManager.startSpectating(deadPlayer, players.stream().findFirst().get());
+                        }
+                    } else if (isTarget) {
+                        Set<Player> players = getPlayersAllive(match.getSettings().getTargetTeam(), match);
+                        if (players.size() == 0) {
+                            lang.sendMessage(deadPlayer, "SPECTATE.dead");
                         } else {
                             spectateManager.startSpectating(deadPlayer, players.stream().findFirst().get());
                         }
                     }
-                }, 15);
+                }, 120);
 
             }
         }

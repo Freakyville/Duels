@@ -134,7 +134,7 @@ public class AcceptCommand extends BaseCommand {
                     "arena", arena,
                     "bet_amount", bet,
                     "required", (required),
-                    "count", (accepters.size() + 1));
+                    "count", (accepters.size()));
         });
     }
 }

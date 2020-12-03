@@ -299,6 +299,7 @@ DUEL:
     command: '&cYou cannot use ''%command%'' while in a duel.'
     teleportation: '&cYou cannot teleport while in a duel.'
     inventory-open: '&cYou cannot open inventories while in a duel.'
+    enderpearl-spam: '&cYou recently threw a enderpearl, wait a bit before throwing again!'
   projectile-hit-message: '{PREFIX} &f%name% &7is now at &d%health%❤&7!'
   on-end:
     tie: '{PREFIX} &7Tie Game!'

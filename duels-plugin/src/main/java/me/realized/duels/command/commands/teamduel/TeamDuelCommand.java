@@ -61,7 +61,10 @@ public class TeamDuelCommand extends BaseCommand {
             lang.sendMessage(sender, "ERROR.duel.inventory-not-empty");
             return true;
         }
-
+        if (args.length == 0) {
+            lang.sendMessage(sender, "COMMAND.duel.teamusage", "command", label);
+            return true;
+        }
         GameMode gameMode = null;
         if (isChild(args[0])) {
             return false;
@@ -147,10 +150,13 @@ public class TeamDuelCommand extends BaseCommand {
 
         final Settings settings = settingManager.getSafely(creator);
         settings.setBet(0);
-
-        Integer bet = getBet(creator, args[3]);
-        if (bet == null)
-            return false;
+        String stringBet = "0";
+        if (args.length > 5) {
+            stringBet = args[5];
+        }
+        Integer bet = getBet(creator, stringBet);
+        if (bet != null)
+            settings.setBet(bet);
         settings.setTargetTeam(team2.stream().map(Entity::getUniqueId).collect(Collectors.toSet()));
         settings.setAllyTeam(team1.stream().map(Entity::getUniqueId).collect(Collectors.toSet()));
 
@@ -164,7 +170,6 @@ public class TeamDuelCommand extends BaseCommand {
         Player p2 = getAndVerifyPlayer(creator, args[0]);
         Player p3 = getAndVerifyPlayer(creator, args[1]);
         Player p4 = getAndVerifyPlayer(creator, args[2]);
-        System.out.println("null check: " + (p2 == null) + " - " + (p3 == null) + " - " + (p4 == null) + Arrays.toString(args));
         if (p2 == null || p3 == null || p4 == null) {
             lang.sendMessage(creator, "ERROR.team.notonline");
             return false;
