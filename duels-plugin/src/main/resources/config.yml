@@ -1,5 +1,5 @@
 # DO NOT EDIT THIS VALUE!
-config-version: 9
+config-version: 8
 
 # If set to 'true', a notification and a download link will be printed on the console whenever an update is available.
 # default: true
