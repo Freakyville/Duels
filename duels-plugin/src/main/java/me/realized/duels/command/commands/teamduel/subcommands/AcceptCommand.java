@@ -116,9 +116,6 @@ public class AcceptCommand extends BaseCommand {
                 return;
             }
 
-            // Players were allowed to move while the request was pending: only check movement from now on.
-            // TeamRequest holds the creator's live Settings, so work on a copy to avoid leaking
-            // other players' locations into the creator's future requests.
             final Settings matchSettings;
 
             if (config.isCancelIfMoved() && !config.isCancelIfMovedWhilePending()) {
