@@ -208,6 +208,12 @@ duel:
   # default: false
   cancel-if-moved: false
 
+  # If set to 'false', the player who sent the request may move freely while waiting for it to be accepted.
+  # Their position is re-recorded when the request is accepted, so only movement after that (e.g. in the item betting GUI) cancels the duel.
+  # NOTE: Only has an effect if 'cancel-if-moved' is enabled.
+  # default: true
+  cancel-if-moved-while-pending: true
+
   # List of worlds to disable dueling.
   blacklisted-worlds:
     - 'world_name_here'

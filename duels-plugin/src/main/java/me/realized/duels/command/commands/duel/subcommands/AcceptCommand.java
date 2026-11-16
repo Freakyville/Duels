@@ -113,6 +113,10 @@ public class AcceptCommand extends BaseCommand {
         lang.sendMessage(target, "COMMAND.duel.request.accept.sender",
             "name", player.getName(), "kit", kit, "arena", arena, "bet_amount", bet, "item_betting", itemBetting);
 
+        if (config.isCancelIfMoved() && !config.isCancelIfMovedWhilePending()) {
+            settings.setBaseLoc(target);
+        }
+
         if (settings.isItemBetting()) {
             settings.setBaseLoc(player);
             settings.setDuelzone(player, duelzone);

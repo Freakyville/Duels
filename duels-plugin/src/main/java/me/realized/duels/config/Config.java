@@ -111,6 +111,8 @@ public class Config extends AbstractConfiguration<DuelsPlugin> {
     @Getter
     private boolean cancelIfMoved;
     @Getter
+    private boolean cancelIfMovedWhilePending;
+    @Getter
     private List<String> blacklistedWorlds;
     @Getter
     private boolean teleportToLastLocation;
@@ -289,6 +291,7 @@ public class Config extends AbstractConfiguration<DuelsPlugin> {
         preventTpToMatchPlayers = configuration.getBoolean("duel.prevent-teleport-to-match-players", true);
         forceAllowCombat = configuration.getBoolean("duel.force-allow-combat", true);
         cancelIfMoved = configuration.getBoolean("duel.cancel-if-moved", false);
+        cancelIfMovedWhilePending = configuration.getBoolean("duel.cancel-if-moved-while-pending", true);
         blacklistedWorlds = configuration.getStringList("duel.blacklisted-worlds");
         teleportToLastLocation = configuration.getBoolean("duel.teleport-to-last-location", false);
         teleportDelay = configuration.getInt("duel.teleport-delay", 5);

@@ -116,7 +116,17 @@ public class AcceptCommand extends BaseCommand {
                 return;
             }
 
-            duelManager.startTeamMatch(player, allyTeam, targetTeam, settings);
+            final Settings matchSettings;
+
+            if (config.isCancelIfMoved() && !config.isCancelIfMovedWhilePending()) {
+                matchSettings = settings.lightCopy();
+                allyTeam.forEach(matchSettings::setBaseLoc);
+                targetTeam.forEach(matchSettings::setBaseLoc);
+            } else {
+                matchSettings = settings;
+            }
+
+            duelManager.startTeamMatch(player, allyTeam, targetTeam, matchSettings);
         }
 
     }
