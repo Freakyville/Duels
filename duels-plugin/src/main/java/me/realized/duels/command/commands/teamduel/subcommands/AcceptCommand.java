@@ -116,6 +116,12 @@ public class AcceptCommand extends BaseCommand {
                 return;
             }
 
+            // Players were allowed to move while the request was pending: only check movement from now on.
+            if (config.isCancelIfMoved() && !config.isCancelIfMovedWhilePending()) {
+                allyTeam.forEach(settings::setBaseLoc);
+                targetTeam.forEach(settings::setBaseLoc);
+            }
+
             duelManager.startTeamMatch(player, allyTeam, targetTeam, settings);
         }
 
