@@ -1,5 +1,5 @@
 # DO NOT EDIT THIS VALUE!
-config-version: 8
+config-version: 9
 
 # If set to 'true', a notification and a download link will be printed on the console whenever an update is available.
 # default: true
@@ -207,6 +207,12 @@ duel:
   # If set to 'true', players will be required to stay in the position where they have sent or accepted the request in order for the duel to start.
   # default: false
   cancel-if-moved: false
+
+  # If set to 'false', the player who sent the request may move freely while waiting for it to be accepted.
+  # Their position is re-recorded when the request is accepted, so only movement after that (e.g. in the item betting GUI) cancels the duel.
+  # NOTE: Only has an effect if 'cancel-if-moved' is enabled.
+  # default: true
+  cancel-if-moved-while-pending: true
 
   # List of worlds to disable dueling.
   blacklisted-worlds:
